@@ -35,6 +35,6 @@ public:
 private:
 	Point3D _pos;
 	Colour _col_ambient;
-	Colour _col_diffuse; 
-	Colour _col_specular; 
+	Colour _col_diffuse;
+	Colour _col_specular;
 };

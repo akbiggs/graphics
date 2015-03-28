@@ -20,6 +20,9 @@
 #define M_PI	3.14159265358979323846
 #endif
 
+class Vector3D;
+class Ray3D;
+
 class Point3D {
 public:
 	Point3D(); 
@@ -29,6 +32,9 @@ public:
 	Point3D& operator =(const Point3D& other); 
 	double& operator[](int i); 
 	double operator[](int i) const; 
+        
+        double dot(const Point3D& other) const;
+        double dot(const Vector3D& other) const;
 
 private:
 	double m_data[3];
@@ -41,9 +47,9 @@ public:
 	Vector3D(const Vector3D& other);
         Vector3D(const Point3D& other);
 
-	Vector3D& operator =(const Vector3D& other); 
+	Vector3D& operator =(const Vector3D& other);
 	double& operator[](int i);  
-	double operator[](int i) const;  
+	double operator[](int i) const;
 
 	double length() const; 
 	double normalize();
@@ -102,6 +108,8 @@ private:
 Matrix4x4 operator *(const Matrix4x4& M, const Matrix4x4& N); 
 Vector3D operator *(const Matrix4x4& M, const Vector3D& v); 
 Point3D operator *(const Matrix4x4& M, const Point3D& p);
+Ray3D operator *(const Matrix4x4& M, const Ray3D& r);
+
 // Multiply n by the transpose of M, useful for transforming normals.  
 // Recall that normals should be transformed by the inverse transpose 
 // of the matrix.  
@@ -118,6 +126,8 @@ public:
 	Colour operator *(const Colour& other); 
 	double& operator[](int i);  
 	double operator[](int i) const; 
+        
+        double intensity() const;
     
 	void clamp(); 	
 
@@ -147,15 +157,19 @@ struct Material {
 struct Intersection {
 	// Location of intersection.
 	Point3D point;
+        
 	// Normal at the intersection.
 	Vector3D normal;
+        
 	// Material at the intersection.
 	Material* mat;
+        
 	// Position of the intersection point on your ray.
 	// (i.e. point = ray.origin + t_value * ray.dir)
 	// This is used when you need to intersect multiply objects and
 	// only want to keep the nearest intersection.
-	double t_value;	
+	double t_value;
+
 	// Set to true when no intersection has occured.
 	bool none;
 };

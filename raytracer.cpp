@@ -215,7 +215,7 @@ void Raytracer::flushPixelBuffer( char *file_name ) {
 }
 
 Colour Raytracer::shadeRay( Ray3D& ray ) {
-	Colour col(255.0, 255.0, 255.0); 
+	Colour col(0.0, 0.0, 0.0); 
 	traverseScene(_root, ray); 
 	
 	// Don't bother shading if the ray didn't hit 
@@ -253,19 +253,12 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			imagePlane[2] = -1;
 
 			// TODO: Convert ray to world space and call 
-			// shadeRay(ray) to generate pixel colour. 	
+			// shadeRay(ray) to generate pixel colour.
 			
-                        Point3D originInWorld = viewToWorld * origin;
+                        Ray3D viewRay(origin, Vector3D(imagePlane));
+                        Ray3D worldRay = viewToWorld * viewRay;
                         
-                        // ray direction expects vector, so convert point3d to
-                        // vector before passing into constructor
-                        Vector3D dirInWorld = viewToWorld * Vector3D(imagePlane);
-                        
-                        printf("%f %f %f\n", dirInWorld[0], dirInWorld[1], dirInWorld[2]);
-                        
-			Ray3D ray(originInWorld, dirInWorld);
-
-			Colour col = shadeRay(ray); 
+			Colour col = shadeRay(worldRay); 
 
 			_rbuffer[i*width+j] = int(col[0]*255);
 			_gbuffer[i*width+j] = int(col[1]*255);

@@ -18,7 +18,28 @@ void PointLight::shade( Ray3D& ray ) {
 	//
 	// It is assumed at this point that the intersection information in ray 
 	// is available.  So be sure that traverseScene() is called on the ray 
-	// before this function.  
+	// before this function.
 
+        Point3D p = ray.intersection.point;
+        Vector3D n = ray.intersection.normal;
+        Vector3D s = ray.dir;
+        
+        Vector3D di = -s;
+        
+        Colour Ia = this->_col_ambient;
+        Colour Id = this->_col_diffuse;
+        Colour Is = this->_col_specular;
+        
+        Colour ra = ray.intersection.mat->ambient;
+        Colour rd = ray.intersection.mat->diffuse;
+        Colour rs = ray.intersection.mat->specular;
+        
+        Vector3D m = 2 * (n.dot(s)) * n - s;
+        Vector3D de = 2 * (n.dot(di)) * n - di;
+        double alpha = ray.intersection.mat->specular_exp;
+        
+        ray.col = fmax(0, s.dot(n)) * rd * Id +
+                ra * Ia +
+                pow(fmax(0, m.dot(de)), alpha) * rs * Is;
 }
 

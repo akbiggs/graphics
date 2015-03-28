@@ -43,6 +43,18 @@ double& Point3D::operator[](int i) {
 double Point3D::operator[](int i) const {
 	return m_data[i];
 }
+
+double Point3D::dot(const Point3D& other) const {
+    	return m_data[0]*other.m_data[0] + 
+		m_data[1]*other.m_data[1] + 
+		m_data[2]*other.m_data[2];
+}
+
+double Point3D::dot(const Vector3D& other) const {
+    	return m_data[0]*other[0] + 
+		m_data[1]*other[1] + 
+		m_data[2]*other[2];
+}
 	
 Vector3D::Vector3D() {
 	m_data[0] = 0.0;
@@ -232,8 +244,14 @@ Colour Colour::operator *(const Colour& other) {
 double& Colour::operator[](int i) {
 	return m_data[i];
 }
+
 double Colour::operator[](int i) const {
 	return m_data[i];
+}
+
+double Colour::intensity() const {
+    // adapted from http://stackoverflow.com/questions/596216/formula-to-determine-brightness-of-rgb-color
+    return 0.2126*m_data[0] + 0.7152*m_data[1] + 0.0722*m_data[2];
 }
 
 void Colour::clamp() {
@@ -373,6 +391,10 @@ Point3D operator *(const Matrix4x4& M, const Point3D& p) {
 			p[0] * M[0][0] + p[1] * M[0][1] + p[2] * M[0][2] + M[0][3],
 			p[0] * M[1][0] + p[1] * M[1][1] + p[2] * M[1][2] + M[1][3],
 			p[0] * M[2][0] + p[1] * M[2][1] + p[2] * M[2][2] + M[2][3]);
+}
+
+Ray3D operator *(const Matrix4x4& M, const Ray3D& r) {
+        return Ray3D(M * r.origin, M * r.dir);
 }
 
 Vector3D transNorm(const Matrix4x4& M, const Vector3D& n) {

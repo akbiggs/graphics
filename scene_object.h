@@ -9,6 +9,7 @@
 ***********************************************************/
 
 #include "util.h"
+#include "stdio.h"
 
 // All primitives should provide a intersection function.  
 // To create more primitives, inherit from SceneObject.
