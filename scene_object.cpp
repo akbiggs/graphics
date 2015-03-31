@@ -30,17 +30,82 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
         Point3D a = modelRay.origin;
         Vector3D d = modelRay.dir;
         
+        Point3D p1 = Point3D(0.5, 0.5, 0);
+        Point3D p2 = Point3D(-0.5, 0.5, 0);
+        Point3D p3 = Point3D(0.5, -0.5, 0);
+        Point3D p4 = Point3D(-0.5, -0.5, 0);
+        
+        Vector3D n1 = Vector3D(p2 - p1).cross(Vector3D(p3 - p1));
+        Vector3D n2 = Vector3D(p3 - p2).cross(Vector3D(p4 - p2));
+        
         double lam;
-        
-        
-        
-        ray.intersection.point = modelToWorld * (a + lam * d);
-        ray.intersection.normal = modelToWorld * Vector3D(ray.intersection.point);
-        ray.intersection.normal.normalize();
+        //printf("%f\n", d.dot(n1));
+        if (d.dot(n1) == 0) {
+            if (not ray.intersection.none) {
+                ray.intersection.none = true;
+                return false;
+            }
+        } else {
+            lam = ((p1 - a).dot(n1))/d.dot(n1);
+            
+            if (((a + lam * d)[2] == 0) && ((a + lam * d)[1] <= 0.5) && ((a + lam * d)[1] >= -0.5)
+                    && ((a + lam * d)[0] <= 0.5) && ((a + lam * d)[0] >= -0.5)) {
+                if (ray.intersection.t_value < lam || ray.intersection.t_value == 0) {
+                    ray.intersection.point = modelToWorld * (a + lam * d);
+                    ray.intersection.normal = modelToWorld * Vector3D(ray.intersection.point);
+                    ray.intersection.normal.normalize();
 
-        ray.intersection.t_value = lam;
-        ray.intersection.none = false;
+                
+                    ray.intersection.t_value = lam;
+                    ray.intersection.none = false;
+                    return true;
+                }
+            }
+            //p1 = (0.5, 0.5, 0);
+            //p2 = (-0.5, 0.5, 0);
+            //p3 = (0.5, -0.5, 0);
+            //p4 = (-0.5, -0.5, 0);
+            
+        }
+        
+        if (d.dot(n2) == 0) {
+            if (not ray.intersection.none) {
+                ray.intersection.none = true;
+                return false;
+            }
+        } else {
+            lam = ((p2 - a).dot(n2))/d.dot(n2);
+            
+            if (((a + lam * d)[2] == 0) && ((a + lam * d)[1] <= 0.5) && ((a + lam * d)[1] >= -0.5)
+                    && ((a + lam * d)[0] <= 0.5) && ((a + lam * d)[0] >= -0.5)) {
+                if (ray.intersection.t_value < lam || ray.intersection.t_value == 0) {
+                    ray.intersection.point = modelToWorld * (a + lam * d);
+                    ray.intersection.normal = modelToWorld * Vector3D(ray.intersection.point);
+                    ray.intersection.normal.normalize();
 
+                
+                    ray.intersection.t_value = lam;
+                    ray.intersection.none = false;
+                    return true;
+                }
+            }
+        
+            //p1 = (0.5, 0.5, 0);
+            //p2 = (-0.5, 0.5, 0);
+            //p3 = (0.5, -0.5, 0);
+            //p4 = (-0.5, -0.5, 0);
+        }
+        
+//        ray.intersection.point = modelToWorld * (a + lam * d);
+//        ray.intersection.normal = modelToWorld * Vector3D(ray.intersection.point);
+//        ray.intersection.normal.normalize();
+//
+//        ray.intersection.t_value = lam;
+//        ray.intersection.none = false;
+        ray.intersection.none = true;
+        if (not ray.intersection.none) {
+            ray.intersection.none = true;
+        }
 	return false;
 }
 
