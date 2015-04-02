@@ -30,6 +30,10 @@ Vector3D Player::getPos() const {
     return this->pos;
 }
 
+void Player::setPos(const Vector3D& p) {
+    this->pos = p;
+}
+
 void Player::setVelocity(const Vector3D& vel) {
     this->vel = vel;
 }
@@ -40,10 +44,20 @@ void Player::update() {
     this->wingRotation = this->areWingsFlappingUp ?
         fmin(WING_ROTATION_MAX, this->wingRotation++) :
         fmax(WING_ROTATION_MIN, this->wingRotation--);
+    
+    if (this->areWingsExtendedFully()) {
+        this->areWingsFlappingUp = !this->areWingsFlappingUp;
+    }
+}
+
+bool Player::areWingsExtendedFully() const {
+    return this->wingRotation == WING_ROTATION_MIN || this->wingRotation == WING_ROTATION_MAX;
 }
 
 void Player::render() {
     glPushMatrix();
+    
+    colour(Colour::white);
     
     // render body
     translateByVector(this->pos);
@@ -68,7 +82,7 @@ void Player::renderWing(bool isLeftWing) {
     scale(Vector3D(1, 0.2, 0.5));
     
     // move to center of wing, render
-    glTranslatef(0.5, 0, 0);
+    glTranslatef(isLeftWing ? 0.5 : -0.5, 0, 0);
     drawCube();
             
     glPopMatrix();

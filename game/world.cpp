@@ -15,6 +15,8 @@
 World::World() {
     Vector3D offset = Vector3D(0, 1, 10);
     this->camera.setOffsetFromPlayer(offset);
+    
+    this->player.setPos(Vector3D(0, 1, 0));
     this->player.setVelocity(Vector3D(0, 0, 1));
 }
 

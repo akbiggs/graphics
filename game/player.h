@@ -24,6 +24,7 @@ public:
     virtual ~Player();
     
     Vector3D getPos() const;
+    void setPos(const Vector3D& p);
     
     void setVelocity(const Vector3D& vel);
     
@@ -31,6 +32,8 @@ public:
     void render();
     
 private:
+    bool areWingsExtendedFully() const;
+    
     void renderWing(bool isLeftWing);
     
     Vector3D pos;
