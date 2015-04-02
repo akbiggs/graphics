@@ -30,10 +30,13 @@ void PointLight::shade( Ray3D& ray ) {
         Colour Id = this->_col_diffuse;
         Colour Is = this->_col_specular;
         
+
         Colour ra = ray.intersection.mat->ambient;
         Colour rd = ray.intersection.mat->diffuse;
         Colour rs = ray.intersection.mat->specular;
         
+//        ray.col = rd;
+//        return;        
         Vector3D m = 2 * (n.dot(s)) * n - s;
         Vector3D de = 2 * (n.dot(di)) * n - di;
         double alpha = ray.intersection.mat->specular_exp;
