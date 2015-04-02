@@ -42,12 +42,12 @@ void World::render() {
         this->renderLane(Colour::red);
 
         glPushMatrix();
-            glTranslatef(2, 0, 0);
+            glTranslatef(4, 0, 0);
             this->renderLane(Colour::green);
         glPopMatrix();
 
         glPushMatrix();
-            glTranslatef(-2, 0, 0);
+            glTranslatef(-4, 0, 0);
             this->renderLane(Colour::blue);
         glPopMatrix();
         
@@ -60,7 +60,7 @@ void World::renderLane(const Colour c) {
     glPushMatrix();
     
     colour(c);
-    glScalef(1, 0.01, 10000);
+    glScalef(2, 0.01, 10000);
     
     drawCube();
     

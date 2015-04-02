@@ -14,7 +14,7 @@ const double WING_OFFSET_X = 0.4;
 const double WING_OFFSET_Y = 0.2;
 const double WING_OFFSET_Z = 0.0;
 
-const double WING_ROTATION_MAX = 45;
+const double WING_ROTATION_MAX = 90;
 const double WING_ROTATION_MIN = 0;
 
 class Player {
