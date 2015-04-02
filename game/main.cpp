@@ -44,10 +44,12 @@
 #include <string.h>
 #include <math.h>
 
+
 #include "keyframe.h"
 #include "timer.h"
 #include "vector.h"
-
+#include "utils.h"
+#include "world.h"
 
 // *************** GLOBAL VARIABLES *************************
 
@@ -78,10 +80,6 @@ bool updateCamZPos = false;
 int lastX = 0;
 int lastY = 0;
 const float ZOOM_SCALE = 0.01;
-
-GLdouble camXPos = 0.0;
-GLdouble camYPos = 0.0;
-GLdouble camZPos = -7.5;
 
 const GLdouble CAMERA_FOVY = 60.0;
 const GLdouble NEAR_CLIP = 0.1;
@@ -132,6 +130,9 @@ Timer* frameRateTimer;
 const float TIME_MIN = 0.0;
 const float TIME_MAX = 10.0; // README: specifies the max time of the animation
 const float SEC_PER_FRAME = 1.0 / 60.0;
+
+// World object
+World world;
 
 // Joint settings
 
@@ -206,10 +207,10 @@ void display(void);
 void mouse(int button, int state, int x, int y);
 void motion(int x, int y);
 
+void gameLoop();
 
 // Functions to help draw the object
 Vector getInterpolatedJointDOFS(float time);
-void drawCube();
 void drawPenguin(bool colored, bool withLighting = true);
 void drawBody(bool colored);
 void drawArm(bool colored, bool left);
@@ -241,7 +242,6 @@ int main(int argc, char** argv) {
         Win[0] = atoi(argv[1]);
         Win[1] = atoi(argv[2]);
     }
-
 
     // Initialize data structs, glut, glui, and opengl
     initDS();
@@ -288,6 +288,7 @@ void initGlut(int argc, char** argv) {
     glutDisplayFunc(display); // Call display whenever new frame needed
     glutMouseFunc(mouse); // Call mouse whenever mouse button pressed
     glutMotionFunc(motion); // Call motion whenever mouse moves while button pressed
+    glutIdleFunc(&gameLoop);
 }
 
 
@@ -480,240 +481,240 @@ void quitButton(int) {
 // Initialize GLUI and the user interface
 
 void initGlui() {
-    GLUI_Panel* glui_panel;
-    GLUI_Spinner* glui_spinner;
-    GLUI_RadioGroup* glui_radio_group;
-
-    GLUI_Master.set_glutIdleFunc(NULL);
-
-
-    // Create GLUI window (joint controls) ***************
-    //
-    glui_joints = GLUI_Master.create_glui("Joint Control", 0, Win[0] + 12, 0);
-
-    // Create controls to specify root position and orientation
-    glui_panel = glui_joints->add_panel("Root");
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "translate x:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_TRANSLATE_X));
-    glui_spinner->set_float_limits(ROOT_TRANSLATE_X_MIN, ROOT_TRANSLATE_X_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "translate y:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_TRANSLATE_Y));
-    glui_spinner->set_float_limits(ROOT_TRANSLATE_Y_MIN, ROOT_TRANSLATE_Y_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "translate z:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_TRANSLATE_Z));
-    glui_spinner->set_float_limits(ROOT_TRANSLATE_Z_MIN, ROOT_TRANSLATE_Z_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "rotate x:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_ROTATE_X));
-    glui_spinner->set_float_limits(ROOT_ROTATE_X_MIN, ROOT_ROTATE_X_MAX, GLUI_LIMIT_WRAP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "rotate y:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_ROTATE_Y));
-    glui_spinner->set_float_limits(ROOT_ROTATE_Y_MIN, ROOT_ROTATE_Y_MAX, GLUI_LIMIT_WRAP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "rotate z:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_ROTATE_Z));
-    glui_spinner->set_float_limits(ROOT_ROTATE_Z_MIN, ROOT_ROTATE_Z_MAX, GLUI_LIMIT_WRAP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    // Create controls to specify head rotation
-    glui_panel = glui_joints->add_panel("Head");
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "head:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::HEAD));
-    glui_spinner->set_float_limits(HEAD_MIN, HEAD_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    // Create controls to specify beak
-    glui_panel = glui_joints->add_panel("Beak");
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "beak:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::BEAK));
-    glui_spinner->set_float_limits(BEAK_MIN, BEAK_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-
-    glui_joints->add_column(false);
-
-
-    // Create controls to specify right arm
-    glui_panel = glui_joints->add_panel("Right arm");
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder pitch:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_SHOULDER_PITCH));
-    glui_spinner->set_float_limits(-SHOULDER_PITCH_MAX, SHOULDER_PITCH_MIN, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder yaw:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_SHOULDER_YAW));
-    glui_spinner->set_float_limits(SHOULDER_YAW_MIN, SHOULDER_YAW_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder roll:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_SHOULDER_ROLL));
-    glui_spinner->set_float_limits(SHOULDER_ROLL_MIN, SHOULDER_ROLL_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "elbow:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_ELBOW));
-    glui_spinner->set_float_limits(ELBOW_MIN, ELBOW_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    // Create controls to specify left arm
-    glui_panel = glui_joints->add_panel("Left arm");
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder pitch:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_SHOULDER_PITCH));
-    glui_spinner->set_float_limits(SHOULDER_PITCH_MIN, SHOULDER_PITCH_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder yaw:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_SHOULDER_YAW));
-    glui_spinner->set_float_limits(SHOULDER_YAW_MIN, SHOULDER_YAW_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder roll:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_SHOULDER_ROLL));
-    glui_spinner->set_float_limits(SHOULDER_ROLL_MIN, SHOULDER_ROLL_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "elbow:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_ELBOW));
-    glui_spinner->set_float_limits(ELBOW_MIN, ELBOW_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-
-    glui_joints->add_column(false);
-
-    // Create controls to specify right leg
-    glui_panel = glui_joints->add_panel("Right leg");
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip pitch:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_HIP_PITCH));
-    glui_spinner->set_float_limits(-HIP_PITCH_MAX, -HIP_PITCH_MIN, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip yaw:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_HIP_YAW));
-    glui_spinner->set_float_limits(HIP_YAW_MIN, HIP_YAW_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip roll:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_HIP_ROLL));
-    glui_spinner->set_float_limits(HIP_ROLL_MIN, HIP_ROLL_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "knee:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_KNEE));
-    glui_spinner->set_float_limits(KNEE_MIN, KNEE_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    // Create controls to specify left leg
-    glui_panel = glui_joints->add_panel("Left leg");
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip pitch:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_HIP_PITCH));
-    glui_spinner->set_float_limits(HIP_PITCH_MIN, HIP_PITCH_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip yaw:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_HIP_YAW));
-    glui_spinner->set_float_limits(HIP_YAW_MIN, HIP_YAW_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip roll:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_HIP_ROLL));
-    glui_spinner->set_float_limits(HIP_ROLL_MIN, HIP_ROLL_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "knee:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_KNEE));
-    glui_spinner->set_float_limits(KNEE_MIN, KNEE_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-
-    ///////////////////////////////////////////////////////////
-    // TODO (for controlling light source position & additional
-    //      rendering styles):
-    //   Add more UI spinner elements here. Be sure to also
-    //   add the appropriate min/max range values to this
-    //   file, and to also add the appropriate enums to the
-    //   enumeration in the Keyframe class (keyframe.h).
-    ///////////////////////////////////////////////////////////
-    
-    // Create controls to specify light angle
-    glui_panel = glui_joints->add_panel("Lights");
-    
-    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "angle:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::LIGHT_ANGLE));
-    glui_spinner->set_float_limits(LIGHT_ANGLE_MIN, LIGHT_ANGLE_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    //
-    // ***************************************************
-
-
-    // Create GLUI window (keyframe controls) ************
-    //
-    glui_keyframe = GLUI_Master.create_glui("Keyframe Control", 0, 0, Win[1] + 64);
-
-    // Create a control to specify the time (for setting a keyframe)
-    glui_panel = glui_keyframe->add_panel("", GLUI_PANEL_NONE);
-    glui_spinner = glui_keyframe->add_spinner_to_panel(glui_panel, "Time:", GLUI_SPINNER_FLOAT, joint_ui_data->getTimePtr());
-    glui_spinner->set_float_limits(TIME_MIN, TIME_MAX, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    // Create a control to specify a keyframe (for updating / loading a keyframe)
-    glui_keyframe->add_column_to_panel(glui_panel, false);
-    glui_spinner = glui_keyframe->add_spinner_to_panel(glui_panel, "Keyframe ID:", GLUI_SPINNER_INT, joint_ui_data->getIDPtr());
-    glui_spinner->set_int_limits(KEYFRAME_MIN, KEYFRAME_MAX - 1, GLUI_LIMIT_CLAMP);
-    glui_spinner->set_speed(SPINNER_SPEED);
-
-    glui_keyframe->add_separator();
-
-    // Add buttons to load and update keyframes
-    // Add buttons to load and save keyframes from a file
-    // Add buttons to start / stop animation and to render frames to file
-    glui_panel = glui_keyframe->add_panel("", GLUI_PANEL_NONE);
-    glui_keyframe->add_button_to_panel(glui_panel, "Load Keyframe", 0, loadKeyframeButton);
-    glui_keyframe->add_button_to_panel(glui_panel, "Load Keyframes From File", 0, loadKeyframesFromFileButton);
-    glui_keyframe->add_button_to_panel(glui_panel, "Start / Stop Animation", 0, animateButton);
-    glui_keyframe->add_column_to_panel(glui_panel, false);
-    glui_keyframe->add_button_to_panel(glui_panel, "Update Keyframe", 0, updateKeyframeButton);
-    glui_keyframe->add_button_to_panel(glui_panel, "Save Keyframes To File", 0, saveKeyframesToFileButton);
-    glui_keyframe->add_button_to_panel(glui_panel, "Render Frames To File", 0, renderFramesToFileButton);
-
-    glui_keyframe->add_separator();
-
-    // Add status line
-    glui_panel = glui_keyframe->add_panel("");
-    status = glui_keyframe->add_statictext_to_panel(glui_panel, "Status: Ready");
-
-    // Add button to quit
-    glui_panel = glui_keyframe->add_panel("", GLUI_PANEL_NONE);
-    glui_keyframe->add_button_to_panel(glui_panel, "Quit", 0, quitButton);
-    //
-    // ***************************************************
-
-
-    // Create GLUI window (render controls) ************
-    //
-    glui_render = GLUI_Master.create_glui("Render Control", 0, 367, Win[1] + 64);
-
-    // Create control to specify the render style
-    glui_panel = glui_render->add_panel("Render Style");
-    
-    // Create radio group for the type of rendering
-    glui_radio_group = glui_render->add_radiogroup_to_panel(glui_panel, &renderStyle);
-    glui_render->add_radiobutton_to_group(glui_radio_group, "Wireframe");
-    glui_render->add_radiobutton_to_group(glui_radio_group, "Solid");
-    glui_render->add_radiobutton_to_group(glui_radio_group, "Solid w/ outlines");
-    
-    glui_panel = glui_render->add_panel("Material Type");
-    
-    // Create radio group for the penguin material
-    glui_radio_group = glui_render->add_radiogroup_to_panel(glui_panel, &materialType);
-    glui_render->add_radiobutton_to_group(glui_radio_group, "Metallic");
-    glui_render->add_radiobutton_to_group(glui_radio_group, "Matte");
-    
-    glui_panel = glui_render->add_panel("Colors");
-    
-    // Create checkbox for whether or not the penguin should use vibrant colors
-    glui_radio_group = glui_render->add_radiogroup_to_panel(glui_panel, &colorStyle);
-    glui_render->add_radiobutton_to_group(glui_radio_group, "Grayscale");
-    glui_render->add_radiobutton_to_group(glui_radio_group, "Disco");
-    
-    //
-    // ***************************************************
-
-
-    // Tell GLUI windows which window is main graphics window
-    glui_joints->set_main_gfx_window(windowID);
-    glui_keyframe->set_main_gfx_window(windowID);
-    glui_render->set_main_gfx_window(windowID);
+//    GLUI_Panel* glui_panel;
+//    GLUI_Spinner* glui_spinner;
+//    GLUI_RadioGroup* glui_radio_group;
+//
+//    GLUI_Master.set_glutIdleFunc(NULL);
+//
+//
+//    // Create GLUI window (joint controls) ***************
+//    //
+//    glui_joints = GLUI_Master.create_glui("Joint Control", 0, Win[0] + 12, 0);
+//
+//    // Create controls to specify root position and orientation
+//    glui_panel = glui_joints->add_panel("Root");
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "translate x:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_TRANSLATE_X));
+//    glui_spinner->set_float_limits(ROOT_TRANSLATE_X_MIN, ROOT_TRANSLATE_X_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "translate y:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_TRANSLATE_Y));
+//    glui_spinner->set_float_limits(ROOT_TRANSLATE_Y_MIN, ROOT_TRANSLATE_Y_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "translate z:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_TRANSLATE_Z));
+//    glui_spinner->set_float_limits(ROOT_TRANSLATE_Z_MIN, ROOT_TRANSLATE_Z_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "rotate x:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_ROTATE_X));
+//    glui_spinner->set_float_limits(ROOT_ROTATE_X_MIN, ROOT_ROTATE_X_MAX, GLUI_LIMIT_WRAP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "rotate y:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_ROTATE_Y));
+//    glui_spinner->set_float_limits(ROOT_ROTATE_Y_MIN, ROOT_ROTATE_Y_MAX, GLUI_LIMIT_WRAP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "rotate z:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::ROOT_ROTATE_Z));
+//    glui_spinner->set_float_limits(ROOT_ROTATE_Z_MIN, ROOT_ROTATE_Z_MAX, GLUI_LIMIT_WRAP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    // Create controls to specify head rotation
+//    glui_panel = glui_joints->add_panel("Head");
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "head:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::HEAD));
+//    glui_spinner->set_float_limits(HEAD_MIN, HEAD_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    // Create controls to specify beak
+//    glui_panel = glui_joints->add_panel("Beak");
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "beak:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::BEAK));
+//    glui_spinner->set_float_limits(BEAK_MIN, BEAK_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//
+//    glui_joints->add_column(false);
+//
+//
+//    // Create controls to specify right arm
+//    glui_panel = glui_joints->add_panel("Right arm");
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder pitch:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_SHOULDER_PITCH));
+//    glui_spinner->set_float_limits(-SHOULDER_PITCH_MAX, SHOULDER_PITCH_MIN, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder yaw:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_SHOULDER_YAW));
+//    glui_spinner->set_float_limits(SHOULDER_YAW_MIN, SHOULDER_YAW_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder roll:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_SHOULDER_ROLL));
+//    glui_spinner->set_float_limits(SHOULDER_ROLL_MIN, SHOULDER_ROLL_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "elbow:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_ELBOW));
+//    glui_spinner->set_float_limits(ELBOW_MIN, ELBOW_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    // Create controls to specify left arm
+//    glui_panel = glui_joints->add_panel("Left arm");
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder pitch:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_SHOULDER_PITCH));
+//    glui_spinner->set_float_limits(SHOULDER_PITCH_MIN, SHOULDER_PITCH_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder yaw:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_SHOULDER_YAW));
+//    glui_spinner->set_float_limits(SHOULDER_YAW_MIN, SHOULDER_YAW_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "shoulder roll:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_SHOULDER_ROLL));
+//    glui_spinner->set_float_limits(SHOULDER_ROLL_MIN, SHOULDER_ROLL_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "elbow:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_ELBOW));
+//    glui_spinner->set_float_limits(ELBOW_MIN, ELBOW_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//
+//    glui_joints->add_column(false);
+//
+//    // Create controls to specify right leg
+//    glui_panel = glui_joints->add_panel("Right leg");
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip pitch:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_HIP_PITCH));
+//    glui_spinner->set_float_limits(-HIP_PITCH_MAX, -HIP_PITCH_MIN, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip yaw:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_HIP_YAW));
+//    glui_spinner->set_float_limits(HIP_YAW_MIN, HIP_YAW_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip roll:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_HIP_ROLL));
+//    glui_spinner->set_float_limits(HIP_ROLL_MIN, HIP_ROLL_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "knee:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::R_KNEE));
+//    glui_spinner->set_float_limits(KNEE_MIN, KNEE_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    // Create controls to specify left leg
+//    glui_panel = glui_joints->add_panel("Left leg");
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip pitch:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_HIP_PITCH));
+//    glui_spinner->set_float_limits(HIP_PITCH_MIN, HIP_PITCH_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip yaw:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_HIP_YAW));
+//    glui_spinner->set_float_limits(HIP_YAW_MIN, HIP_YAW_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "hip roll:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_HIP_ROLL));
+//    glui_spinner->set_float_limits(HIP_ROLL_MIN, HIP_ROLL_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "knee:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::L_KNEE));
+//    glui_spinner->set_float_limits(KNEE_MIN, KNEE_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//
+//    ///////////////////////////////////////////////////////////
+//    // TODO (for controlling light source position & additional
+//    //      rendering styles):
+//    //   Add more UI spinner elements here. Be sure to also
+//    //   add the appropriate min/max range values to this
+//    //   file, and to also add the appropriate enums to the
+//    //   enumeration in the Keyframe class (keyframe.h).
+//    ///////////////////////////////////////////////////////////
+//    
+//    // Create controls to specify light angle
+//    glui_panel = glui_joints->add_panel("Lights");
+//    
+//    glui_spinner = glui_joints->add_spinner_to_panel(glui_panel, "angle:", GLUI_SPINNER_FLOAT, joint_ui_data->getDOFPtr(Keyframe::LIGHT_ANGLE));
+//    glui_spinner->set_float_limits(LIGHT_ANGLE_MIN, LIGHT_ANGLE_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    //
+//    // ***************************************************
+//
+//
+//    // Create GLUI window (keyframe controls) ************
+//    //
+//    glui_keyframe = GLUI_Master.create_glui("Keyframe Control", 0, 0, Win[1] + 64);
+//
+//    // Create a control to specify the time (for setting a keyframe)
+//    glui_panel = glui_keyframe->add_panel("", GLUI_PANEL_NONE);
+//    glui_spinner = glui_keyframe->add_spinner_to_panel(glui_panel, "Time:", GLUI_SPINNER_FLOAT, joint_ui_data->getTimePtr());
+//    glui_spinner->set_float_limits(TIME_MIN, TIME_MAX, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    // Create a control to specify a keyframe (for updating / loading a keyframe)
+//    glui_keyframe->add_column_to_panel(glui_panel, false);
+//    glui_spinner = glui_keyframe->add_spinner_to_panel(glui_panel, "Keyframe ID:", GLUI_SPINNER_INT, joint_ui_data->getIDPtr());
+//    glui_spinner->set_int_limits(KEYFRAME_MIN, KEYFRAME_MAX - 1, GLUI_LIMIT_CLAMP);
+//    glui_spinner->set_speed(SPINNER_SPEED);
+//
+//    glui_keyframe->add_separator();
+//
+//    // Add buttons to load and update keyframes
+//    // Add buttons to load and save keyframes from a file
+//    // Add buttons to start / stop animation and to render frames to file
+//    glui_panel = glui_keyframe->add_panel("", GLUI_PANEL_NONE);
+//    glui_keyframe->add_button_to_panel(glui_panel, "Load Keyframe", 0, loadKeyframeButton);
+//    glui_keyframe->add_button_to_panel(glui_panel, "Load Keyframes From File", 0, loadKeyframesFromFileButton);
+//    glui_keyframe->add_button_to_panel(glui_panel, "Start / Stop Animation", 0, animateButton);
+//    glui_keyframe->add_column_to_panel(glui_panel, false);
+//    glui_keyframe->add_button_to_panel(glui_panel, "Update Keyframe", 0, updateKeyframeButton);
+//    glui_keyframe->add_button_to_panel(glui_panel, "Save Keyframes To File", 0, saveKeyframesToFileButton);
+//    glui_keyframe->add_button_to_panel(glui_panel, "Render Frames To File", 0, renderFramesToFileButton);
+//
+//    glui_keyframe->add_separator();
+//
+//    // Add status line
+//    glui_panel = glui_keyframe->add_panel("");
+//    status = glui_keyframe->add_statictext_to_panel(glui_panel, "Status: Ready");
+//
+//    // Add button to quit
+//    glui_panel = glui_keyframe->add_panel("", GLUI_PANEL_NONE);
+//    glui_keyframe->add_button_to_panel(glui_panel, "Quit", 0, quitButton);
+//    //
+//    // ***************************************************
+//
+//
+//    // Create GLUI window (render controls) ************
+//    //
+//    glui_render = GLUI_Master.create_glui("Render Control", 0, 367, Win[1] + 64);
+//
+//    // Create control to specify the render style
+//    glui_panel = glui_render->add_panel("Render Style");
+//    
+//    // Create radio group for the type of rendering
+//    glui_radio_group = glui_render->add_radiogroup_to_panel(glui_panel, &renderStyle);
+//    glui_render->add_radiobutton_to_group(glui_radio_group, "Wireframe");
+//    glui_render->add_radiobutton_to_group(glui_radio_group, "Solid");
+//    glui_render->add_radiobutton_to_group(glui_radio_group, "Solid w/ outlines");
+//    
+//    glui_panel = glui_render->add_panel("Material Type");
+//    
+//    // Create radio group for the penguin material
+//    glui_radio_group = glui_render->add_radiogroup_to_panel(glui_panel, &materialType);
+//    glui_render->add_radiobutton_to_group(glui_radio_group, "Metallic");
+//    glui_render->add_radiobutton_to_group(glui_radio_group, "Matte");
+//    
+//    glui_panel = glui_render->add_panel("Colors");
+//    
+//    // Create checkbox for whether or not the penguin should use vibrant colors
+//    glui_radio_group = glui_render->add_radiogroup_to_panel(glui_panel, &colorStyle);
+//    glui_render->add_radiobutton_to_group(glui_radio_group, "Grayscale");
+//    glui_render->add_radiobutton_to_group(glui_radio_group, "Disco");
+//    
+//    //
+//    // ***************************************************
+//
+//
+//    // Tell GLUI windows which window is main graphics window
+//    glui_joints->set_main_gfx_window(windowID);
+//    glui_keyframe->set_main_gfx_window(windowID);
+//    glui_render->set_main_gfx_window(windowID);
 }
 
 
@@ -840,94 +841,75 @@ void display(void) {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     
-
-    // Specify camera transformation
-    glTranslatef(camXPos, camYPos, camZPos);
-
-
-    // Get the time for the current animation step, if necessary
-    if (animate_mode) {
-        float curTime = animationTimer->elapsed();
-
-        if (curTime >= keyframes[maxValidKeyframe].getTime()) {
-            // Restart the animation
-            animationTimer->reset();
-            curTime = animationTimer->elapsed();
-        }
-
-        ///////////////////////////////////////////////////////////
-        // README:
-        //   This statement loads the interpolated joint DOF vector
-        //   into the global 'joint_ui_data' variable. Use the
-        //   'joint_ui_data' variable below in your model code to
-        //   drive the model for animation.
-        ///////////////////////////////////////////////////////////
-        // Get the interpolated joint DOFs
-        joint_ui_data->setDOFVector(getInterpolatedJointDOFS(curTime));
-
-        // Update user interface
-        joint_ui_data->setTime(curTime);
-        glui_keyframe->sync_live();
-    }
-
-    ///////////////////////////////////////////////////////////
-    // TODO:
-    //   Modify this function to draw the scene.
-    //   This should include function calls that apply
-    //   the appropriate transformation matrices and render
-    //   the individual body parts.
-    //   Use the 'joint_ui_data' data structure to obtain
-    //   the joint DOFs to specify your transformations.
-    //   Sample code is provided below and demonstrates how
-    //   to access the joint DOF values. This sample code
-    //   should be replaced with your own.
-    //   Use the 'renderStyle' variable and the associated
-    //   enumeration to determine how the geometry should be
-    //   rendered.
-    ///////////////////////////////////////////////////////////
-
+    world.update();
+    world.render();
+//
+//    // Get the time for the current animation step, if necessary
+//    if (animate_mode) {
+//        float curTime = animationTimer->elapsed();
+//
+//        if (curTime >= keyframes[maxValidKeyframe].getTime()) {
+//            // Restart the animation
+//            animationTimer->reset();
+//            curTime = animationTimer->elapsed();
+//        }
+//
+//        ///////////////////////////////////////////////////////////
+//        // README:
+//        //   This statement loads the interpolated joint DOF vector
+//        //   into the global 'joint_ui_data' variable. Use the
+//        //   'joint_ui_data' variable below in your model code to
+//        //   drive the model for animation.
+//        ///////////////////////////////////////////////////////////
+//        // Get the interpolated joint DOFs
+//        joint_ui_data->setDOFVector(getInterpolatedJointDOFS(curTime));
+//
+//        // Update user interface
+//        joint_ui_data->setTime(curTime);
+//        glui_keyframe->sync_live();
+//    }
 
     // determine render style and set glPolygonMode appropriately
-    switch (renderStyle) {
-        case WIREFRAME:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-            break;
-            
-        case SOLID:
-        case OUTLINED: // if outlined, fill in polygons before outlining
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-            break;
-    }
+//    switch (renderStyle) {
+//        case WIREFRAME:
+//            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//            break;
+//            
+//        case SOLID:
+//        case OUTLINED: // if outlined, fill in polygons before outlining
+//            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+//            break;
+//    }
+//    
+//    // choose material for penguin based on user controls
+//    GLfloat lowValues[] = { 0.1, 0.1, 0.1, 1.0 };
+//    GLfloat highValues[] = { 0.8, 0.8, 0.8, 1.0 };
+//    switch (materialType) {
+//        case METALLIC:
+//            // low diffuse and high specular
+//            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, highValues);
+//            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, lowValues);
+//            
+//            break;
+//
+//        case MATTE:
+//            // low specular and high diffuse
+//            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, lowValues);
+//            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, highValues);
+//            
+//            break;
+//    }
     
-    // choose material for penguin based on user controls
-    GLfloat lowValues[] = { 0.1, 0.1, 0.1, 1.0 };
-    GLfloat highValues[] = { 0.8, 0.8, 0.8, 1.0 };
-    switch (materialType) {
-        case METALLIC:
-            // low diffuse and high specular
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, highValues);
-            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, lowValues);
-            
-            break;
-
-        case MATTE:
-            // low specular and high diffuse
-            glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, lowValues);
-            glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, highValues);
-            
-            break;
-    }
+//    drawPenguin(colorStyle == DISCO);
     
-    drawPenguin(colorStyle == DISCO);
-    
-    if (renderStyle == OUTLINED) {
-        // after drawing solid version, offset and render wireframe
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        glPushMatrix();
-                glTranslatef(0.01, 0.01, 0.01);
-                drawPenguin(false, false);
-        glPopMatrix();
-    }
+//    if (renderStyle == OUTLINED) {
+//        // after drawing solid version, offset and render wireframe
+//        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+//        glPushMatrix();
+//                glTranslatef(0.01, 0.01, 0.01);
+//                drawPenguin(false, false);
+//        glPopMatrix();
+//    }
 
     // Execute any GL functions that are in the queue just to be safe
     glFlush();
@@ -963,74 +945,37 @@ void mouse(int button, int state, int x, int y) {
 // Handles mouse motion events while a button is pressed
 
 void motion(int x, int y) {
-    // If the RMB is pressed and dragged then zoom in / out
-    if (updateCamZPos) {
-        // Update camera z position
-        camZPos += (x - lastX) * ZOOM_SCALE;
-        lastX = x;
+//    // If the RMB is pressed and dragged then zoom in / out
+//    if (updateCamZPos) {
+//        // Update camera z position
+//        camZPos += (x - lastX) * ZOOM_SCALE;
+//        lastX = x;
+//
+//        // Redraw the scene from updated camera position
+//        glutSetWindow(windowID);
+//        glutPostRedisplay();
+//    }
+}
 
-        // Redraw the scene from updated camera position
-        glutSetWindow(windowID);
+// Game loop for the program
+// Nothing too complicated/awesome, just checks the time between updates and
+// tries to update+redraw a certain number of times per second.
+
+int desiredFps = 60;
+double timeBetweenUpdates = 1000 / desiredFps;
+long previousUpdateTime = 0;
+
+void gameLoop() {
+    long currentTime = getTotalMillisecondsElapsed();
+    long timeElapsedSincePreviousUpdate = currentTime - previousUpdateTime;
+    
+    if (timeElapsedSincePreviousUpdate >= timeBetweenUpdates) {
+        previousUpdateTime = currentTime;
+        
+        display();
+        
         glutPostRedisplay();
     }
-}
-
-
-// Draw a unit cube, centered at the current location
-// README: Helper code for drawing a cube
-
-void drawCube() {
-    glBegin(GL_QUADS);
-    
-    // draw front face
-    glNormal3f(0.0, 0.0, 1.0);
-    glVertex3f(-1.0, -1.0, 1.0);
-    glVertex3f(1.0, -1.0, 1.0);
-    glVertex3f(1.0, 1.0, 1.0);
-    glVertex3f(-1.0, 1.0, 1.0);
-
-    // draw back face
-    glNormal3f(0.0, 0.0, -1.0);
-    glVertex3f(1.0, -1.0, -1.0);
-    glVertex3f(-1.0, -1.0, -1.0);
-    glVertex3f(-1.0, 1.0, -1.0);
-    glVertex3f(1.0, 1.0, -1.0);
-
-    // draw left face
-    glNormal3f(-1.0, 0.0, 0.0);
-    glVertex3f(-1.0, -1.0, -1.0);
-    glVertex3f(-1.0, -1.0, 1.0);
-    glVertex3f(-1.0, 1.0, 1.0);
-    glVertex3f(-1.0, 1.0, -1.0);
-
-    // draw right face
-    glNormal3f(1.0, 0.0, 0.0);
-    glVertex3f(1.0, -1.0, 1.0);
-    glVertex3f(1.0, -1.0, -1.0);
-    glVertex3f(1.0, 1.0, -1.0);
-    glVertex3f(1.0, 1.0, 1.0);
-
-    // draw top
-    glNormal3f(0.0, 1.0, 0.0);
-    glVertex3f(-1.0, 1.0, 1.0);
-    glVertex3f(1.0, 1.0, 1.0);
-    glVertex3f(1.0, 1.0, -1.0);
-    glVertex3f(-1.0, 1.0, -1.0);
-
-    // draw bottom
-    glNormal3f(0.0, -1.0, 0.0);
-    glVertex3f(-1.0, -1.0, -1.0);
-    glVertex3f(1.0, -1.0, -1.0);
-    glVertex3f(1.0, -1.0, 1.0);
-    glVertex3f(-1.0, -1.0, 1.0);
-    
-    glEnd();
-}
-
-void rotate(GLfloat x, GLfloat y, GLfloat z) {
-    glRotatef(x, 1.0, 0.0, 0.0);
-    glRotatef(y, 0.0, 1.0, 0.0);
-    glRotatef(z, 0.0, 0.0, 1.0);
 }
 
 void drawPenguin(bool colored, bool withLighting) {
