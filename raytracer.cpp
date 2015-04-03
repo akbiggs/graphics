@@ -271,6 +271,8 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 					_rbuffer[i*width+j] += int(col[0]*255*0.25);
 					_gbuffer[i*width+j] += int(col[1]*255*0.25);
 					_bbuffer[i*width+j] += int(col[2]*255*0.25);
+				}
+			}
 		}
 	}
 
