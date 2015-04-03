@@ -49,9 +49,15 @@ void PointLight::shade( Ray3D& ray ) {
 		
         double alpha = ray.intersection.mat->specular_exp;
         
-        ray.col = fmax(0, n.dot(ld)) * rd * Id +
-                ra * Ia +
-                pow(fmax(0, di.dot(de)), alpha) * rs * Is;
+		
+		
+		//diffuse
+		ray.col = (fmax(0, n.dot(ld)) * rd * Id) + (ra * Ia);
+		
+		//phong shading
+//        ray.col = fmax(0, n.dot(ld)) * rd * Id +
+//                ra * Ia +
+//                pow(fmax(0, di.dot(de)), alpha) * rs * Is;
 		ray.col.clamp();
 }
 
