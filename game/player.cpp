@@ -16,9 +16,7 @@
 /* CONSTRUCTOR/DESTRUCTOR */
 
 Player::Player() {
-}
-
-Player::Player(const Player& orig) {
+    this->wingRotation = WING_ROTATION_MIN;
 }
 
 Player::~Player() {
@@ -60,7 +58,7 @@ void Player::render() {
     colour(Colour::white);
     
     // render body
-    translateByVector(this->pos);
+    translate(this->pos);
     drawCube();
     
     // render both left and right wings
@@ -75,7 +73,7 @@ void Player::renderWing(bool isLeftWing) {
     
     // move to wing joint
     Vector3D offsetFromPlayerCenter = isLeftWing ? Vector3D(0.4, 0.2, 0) : Vector3D(-0.4, 0.2, 0);
-    translateByVector(offsetFromPlayerCenter);
+    translate(offsetFromPlayerCenter);
     
     // rotate + scale
     rotate(Vector3D(0, 0, isLeftWing ? this->wingRotation : -this->wingRotation));

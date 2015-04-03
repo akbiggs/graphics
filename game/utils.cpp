@@ -205,6 +205,9 @@ Vector3D Vector3D::cross(const Vector3D& other) const
 			m_data[0]*other[1] - m_data[1]*other[0]);
 }
 
+Vector3D Vector3D::zero = Vector3D(0, 0, 0);
+Vector3D Vector3D::one = Vector3D(1, 1, 1);
+
 Vector3D operator *(double s, const Vector3D& v)
 {
   return Vector3D(s*v[0], s*v[1], s*v[2]);
@@ -473,7 +476,7 @@ long getTotalMillisecondsElapsed() {
     return (currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000.0) + 0.5;
 }
 
-void translateByVector(const Vector3D& delta) {
+void translate(const Vector3D& delta) {
     glTranslatef(delta[0], delta[1], delta[2]);
 }
 
@@ -489,6 +492,17 @@ void rotate(const Vector3D& amount) {
 
 void scale(const Vector3D& scale) {
     glScalef(scale[0], scale[1], scale[2]);
+}
+
+void cube(const Vector3D& pos, const Vector3D& rot, const Vector3D& scale) {
+    glPushMatrix();
+    
+    translate(pos);
+    rotate(rot);
+    scale(scale);
+    drawCube();
+    
+    glPopMatrix();
 }
 
 void colour(const Colour& c) {

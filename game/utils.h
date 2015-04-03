@@ -55,6 +55,9 @@ public:
 	double dot(const Vector3D& other) const; 
 	Vector3D cross(const Vector3D& other) const; 
 
+        static Vector3D zero;
+        static Vector3D one;
+
 private:
 	double m_data[3];
 };
@@ -207,10 +210,11 @@ long getTotalMillisecondsElapsed();
 
 /* GL HELPERS */
 
-void translateByVector(const Vector3D& delta);
+void translate(const Vector3D& delta);
 void rotate(GLfloat x, GLfloat y, GLfloat z);
 void rotate(const Vector3D& amount);
 void scale(const Vector3D& amount);
+void cube(const Vector3D& pos, const Vector3D& rot, const Vector3D& scale);
 void colour(const Colour& c);
 
 #endif	/* HELPERS_H */

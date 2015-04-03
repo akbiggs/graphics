@@ -7,6 +7,8 @@
 
 #include "world.h"
 #include "camera.h"
+#include "utils.h"
+
 #include <stdio.h>
 #include <GL/gl.h>
 
@@ -18,10 +20,9 @@ World::World() {
     
     this->player.setPos(Vector3D(0, 1, 0));
     this->player.setVelocity(Vector3D(0, 0, 1));
-}
-
-World::World(const World& orig) : player(orig.player) {
-    printf("wtf\n");
+    
+    this->obstacles.push_back(Obstacle(Vector3D(2, 0, -10), Vector3D(0.5, 0.5, 0.5)));
+    this->obstacles.push_back(Obstacle(Vector3D(-2, 0, -10), Vector3D(0.5, 0.5, 0.5)));
 }
 
 World::~World() {
@@ -39,20 +40,24 @@ void World::render() {
         
         this->camera.apply();
         
-        this->renderLane(Colour::red);
-
-        glPushMatrix();
-            glTranslatef(4, 0, 0);
-            this->renderLane(Colour::green);
-        glPopMatrix();
-
-        glPushMatrix();
-            glTranslatef(-4, 0, 0);
-            this->renderLane(Colour::blue);
-        glPopMatrix();
+        this->renderLanes();
         
         this->player.render();
 
+    glPopMatrix();
+}
+
+void World::renderLanes() {
+    this->renderLane(Colour::red);
+
+    glPushMatrix();
+        glTranslatef(4, 0, 0);
+        this->renderLane(Colour::green);
+    glPopMatrix();
+
+    glPushMatrix();
+        glTranslatef(-4, 0, 0);
+        this->renderLane(Colour::blue);
     glPopMatrix();
 }
 

@@ -10,11 +10,12 @@
 
 #include "player.h"
 #include "camera.h"
+#include "obstacle.h"
+#include <vector>
 
 class World {
 public:
     World();
-    World(const World& orig);
     virtual ~World();
     
     void update();
@@ -24,10 +25,13 @@ public:
     double loopTimeAccumulated;
     
 private:
+    void renderLanes();
     void renderLane(const Colour c);
     
     Player player;
     Camera camera;
+    
+    std::vector<Obstacle> obstacles;
 };
 
 #endif	/* WORLD_H */

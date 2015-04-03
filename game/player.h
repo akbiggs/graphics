@@ -20,7 +20,6 @@ const double WING_ROTATION_MIN = 0;
 class Player {
 public:
     Player();
-    Player(const Player& orig);
     virtual ~Player();
     
     Vector3D getPos() const;

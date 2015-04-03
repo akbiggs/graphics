@@ -1,5 +1,5 @@
 #!/bin/bash
-make
+make all
 if [ $? -eq 0 ]; then
     ./main
 fi
