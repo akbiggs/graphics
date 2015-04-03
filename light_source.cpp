@@ -23,6 +23,7 @@ void PointLight::shade( Ray3D& ray ) {
         Point3D p = ray.intersection.point;
         Vector3D n = ray.intersection.normal;
         Vector3D s = ray.dir;
+		Vector3D ld = this->_pos - p;
         
         Vector3D di = -s;
         
@@ -37,12 +38,12 @@ void PointLight::shade( Ray3D& ray ) {
         
 //        ray.col = rd;
 //        return;        
-        Vector3D m = 2 * (n.dot(s)) * n - s;
+        //Vector3D m = 2 * (n.dot(s)) * n - s;
         Vector3D de = 2 * (n.dot(di)) * n - di;
         double alpha = ray.intersection.mat->specular_exp;
         
-        ray.col = fmax(0, s.dot(n)) * rd * Id +
+        ray.col = fmax(0, n.dot(ld)) * rd * Id +
                 ra * Ia +
-                pow(fmax(0, m.dot(de)), alpha) * rs * Is;
+                pow(fmax(0, di.dot(de)), alpha) * rs * Is;
 }
 
