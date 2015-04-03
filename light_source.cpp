@@ -42,6 +42,8 @@ void PointLight::shade( Ray3D& ray ) {
 //        ray.col = rd;
 //        return;        
         //Vector3D m = 2 * (n.dot(s)) * n - s;
+		
+		//reflection direction
         Vector3D de = 2 * (n.dot(ld)) * n - ld;
 		de.normalize();
 		
