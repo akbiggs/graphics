@@ -153,7 +153,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
 						Vector3D normal = ray.intersection.point;
 						normal.normalize();
 						
-                        ray.intersection.normal = transNorm(worldToModel, normal);
+                        ray.intersection.normal = transNorm(worldToModel, -normal);
                         ray.intersection.normal.normalize();
 
                         ray.intersection.t_value = lam;
