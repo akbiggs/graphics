@@ -25,7 +25,7 @@ void PointLight::shade( Ray3D& ray ) {
 		n.normalize();
         //Vector3D s = ray.dir;
 		Vector3D ld = this->_pos - p;
-		ld.normalize()
+		ld.normalize();
         
         Vector3D di = -ray.dir;
 		di.normalize();
