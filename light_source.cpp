@@ -52,5 +52,6 @@ void PointLight::shade( Ray3D& ray ) {
         ray.col = fmax(0, n.dot(ld)) * rd * Id +
                 ra * Ia +
                 pow(fmax(0, di.dot(de)), alpha) * rs * Is;
+		ray.col.clamp();
 }
 
