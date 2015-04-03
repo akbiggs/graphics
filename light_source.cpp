@@ -22,10 +22,13 @@ void PointLight::shade( Ray3D& ray ) {
 
         Point3D p = ray.intersection.point;
         Vector3D n = ray.intersection.normal;
-        Vector3D s = ray.dir;
+		n.normalize();
+        //Vector3D s = ray.dir;
 		Vector3D ld = this->_pos - p;
+		ld.normalize()
         
-        Vector3D di = -s;
+        Vector3D di = -ray.dir;
+		di.normalize();
         
         Colour Ia = this->_col_ambient;
         Colour Id = this->_col_diffuse;
@@ -40,6 +43,8 @@ void PointLight::shade( Ray3D& ray ) {
 //        return;        
         //Vector3D m = 2 * (n.dot(s)) * n - s;
         Vector3D de = 2 * (n.dot(di)) * n - di;
+		de.normalize();
+		
         double alpha = ray.intersection.mat->specular_exp;
         
         ray.col = fmax(0, n.dot(ld)) * rd * Id +
