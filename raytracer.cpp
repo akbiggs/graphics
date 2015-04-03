@@ -240,6 +240,7 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 
 	initPixelBuffer();
 	viewToWorld = initInvViewMatrix(eye, view, up);
+
 	
 	// Construct a ray for each pixel.
 	for (int i = 0; i < _scrHeight; i++) {
@@ -249,9 +250,6 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 			
 			//anti-aliasing time
 			//render pixel 4 times and then average
-	        float sum_col_0;
-	        float sum_col_1;
-	        float sum_col_2;
 			
 			for (float ih = i - 0.5; ih <= i + 0.5; ih += 1.0) {
 			    for (float jh = j - 0.5; jh <= j + 0.5; jh += 1.0) {
@@ -270,14 +268,11 @@ void Raytracer::render( int width, int height, Point3D eye, Vector3D view,
 					Colour col = shadeRay(worldRay); 
 					
 					//average the rays
-					sum_col_0 += float(col[0]*255*0.25);
-					sum_col_1 += float(col[1]*255*0.25);
-					sum_col_2 += float(col[2]*255*0.25);
+					_rbuffer[i*width+j] += int(col[0]*255*0.25);
+					_gbuffer[i*width+j] += int(col[1]*255*0.25);
+					_bbuffer[i*width+j] += int(col[2]*255*0.25);
 				}
 			}
-			_rbuffer[i*width+j] = int(sum_col_0);
-			_gbuffer[i*width+j] = int(sum_col_1);
-			_bbuffer[i*width+j] = int(sum_col_2);
 		}
 	}
 
