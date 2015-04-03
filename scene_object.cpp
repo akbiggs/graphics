@@ -148,7 +148,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
                         } else {
                             printf("WTF LAMBDAS %f %f\n", lam1, lam2);
                         }
-                        Vector3d normal = Vector3D(ray.intersection.point);
+                        Vector3d normal = ray.intersection.point;
 						normal.normalize();
 						
                         ray.intersection.point = modelToWorld * (a + lam * d);
