@@ -57,7 +57,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
                     && (ry[0] <= 0.5) && (ry[0] >= -0.5)) {
                 if (ray.intersection.t_value > lam || ray.intersection.none) {
                     ray.intersection.point = modelToWorld * (a + lam * d);
-                    ray.intersection.normal = transNorm(worldToModel, Vector3D(0,0,-1));
+                    ray.intersection.normal = transNorm(worldToModel, Vector3D(0,0,1));
                     ray.intersection.normal.normalize();
 
                     ray.intersection.t_value = lam;
@@ -84,7 +84,7 @@ bool UnitSquare::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
                     && (ry[0] <= 0.5) && (ry[0] >= -0.5)) {
                 if (ray.intersection.t_value > lam || ray.intersection.none) {
                     ray.intersection.point = modelToWorld * (a + lam * d);
-                    ray.intersection.normal = transNorm(worldToModel, Vector3D(0,0,-1));
+                    ray.intersection.normal = transNorm(worldToModel, Vector3D(0,0,1));
                     ray.intersection.normal.normalize();
 
                     ray.intersection.t_value = lam;
@@ -150,7 +150,7 @@ bool UnitSphere::intersect( Ray3D& ray, const Matrix4x4& worldToModel,
                         }
                         
                         ray.intersection.point = modelToWorld * (a + lam * d);
-                        ray.intersection.normal = transNorm(worldToModel, Vector3D(ray.intersection.point));
+                        ray.intersection.normal = transNorm(worldToModel, -Vector3D(ray.intersection.point));
                         ray.intersection.normal.normalize();
 
                         ray.intersection.t_value = lam;
