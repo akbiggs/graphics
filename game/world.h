@@ -20,6 +20,9 @@ public:
     
     void addObstacle(Vector3D pos);
     
+    void keydown(unsigned char key);
+    void keyup(unsigned char key);
+    
     void update();
     void render();
 

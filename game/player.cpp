@@ -17,7 +17,7 @@
 
 Player::Player() {
     this->wingRotation = WING_ROTATION_MIN;
-    this->collider = BoundingBox(Vector3D(0, 0, 0), PLAYER_SCALE);
+    this->collider = BoundingBox(Vector3D(0, 0, 0), 2 * PLAYER_SCALE);
 }
 
 Player::~Player() {
@@ -34,8 +34,30 @@ void Player::setPos(const Vector3D& p) {
     this->collider.SetPos(this->pos);
 }
 
+Vector3D Player::getVelocity() const {
+    return this->vel;
+}
+
 void Player::setVelocity(const Vector3D& vel) {
     this->vel = vel;
+}
+
+void Player::moveLeft() {
+    Vector3D velocity = this->getVelocity();
+    velocity[0] = -PLAYER_MOVE_SPEED;
+    this->setVelocity(velocity);
+}
+
+void Player::moveRight() {
+    Vector3D velocity = this->getVelocity();
+    velocity[0] = PLAYER_MOVE_SPEED;
+    this->setVelocity(velocity);
+}
+
+void Player::stopMovement() {
+    Vector3D velocity = this->getVelocity();
+    velocity[0] = 0;
+    this->setVelocity(velocity);
 }
 
 bool Player::collidesWithObstacle(BoundingBox obstacle) {
@@ -71,6 +93,8 @@ void Player::render() {
     // render both left and right wings
     this->renderWing(false);
     this->renderWing(true);
+    
+//    this->collider.render();
 
     glPopMatrix();
 }
@@ -91,6 +115,4 @@ void Player::renderWing(bool isLeftWing) {
     drawCube();
 
     glPopMatrix();
-    
-    this->collider.render();
 }

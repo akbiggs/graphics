@@ -28,7 +28,7 @@ World::World() {
 }
 
 World::~World() {
-//    this->obstacles.clear();
+    delete this->obstacles;
 }
 
 /* METHODS */
@@ -37,12 +37,26 @@ void World::addObstacle(Vector3D pos) {
     this->obstacles[numObstacles++] = BoundingBox(pos, Vector3D(1, 1, 1));
 }
 
+void World::keydown(unsigned char key) {
+    if (key == 'a') {
+        this->player.moveLeft();
+    } else if (key == 'd') {
+        this->player.moveRight();
+    }
+}
+
+void World::keyup(unsigned char key) {
+    this->player.stopMovement();
+}
+
 void World::update() {
     this->camera.update(this->player);
     this->player.update();
     
     for (int i = 0; i < this->numObstacles; i++) {
-        printf("Intersection: %d\n", this->player.collidesWithObstacle(this->obstacles[i]));
+        if (this->player.collidesWithObstacle(this->obstacles[i])) {
+            printf("Colliding\n");
+        }
     }
 }
 

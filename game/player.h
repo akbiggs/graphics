@@ -19,6 +19,7 @@ const double WING_ROTATION_MAX = 45;
 const double WING_ROTATION_MIN = 0;
 
 const Vector3D PLAYER_SCALE = Vector3D(1, 0.2, 0.5);
+const double PLAYER_MOVE_SPEED = 0.1;
 
 class Player {
 public:
@@ -28,7 +29,12 @@ public:
     Vector3D getPos() const;
     void setPos(const Vector3D& p);
     
+    Vector3D getVelocity() const;
     void setVelocity(const Vector3D& vel);
+    
+    void moveLeft();
+    void moveRight();
+    void stopMovement();
     
     bool collidesWithObstacle(BoundingBox obstacle);
     
