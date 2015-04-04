@@ -42,13 +42,23 @@ void PointLight::shade( Ray3D& ray ) {
 //        ray.col = rd;
 //        return;        
         //Vector3D m = 2 * (n.dot(s)) * n - s;
+		
+		//reflection direction
         Vector3D de = 2 * (n.dot(ld)) * n - ld;
 		de.normalize();
 		
         double alpha = ray.intersection.mat->specular_exp;
         
+		//scene signature
+		//ray.col = rd;
+		
+		//diffuse
+		//ray.col = (fmax(0, n.dot(ld)) * rd * Id) + (ra * Ia);
+		
+		//phong shading
         ray.col = fmax(0, n.dot(ld)) * rd * Id +
                 ra * Ia +
                 pow(fmax(0, di.dot(de)), alpha) * rs * Is;
+		ray.col.clamp();
 }
 
