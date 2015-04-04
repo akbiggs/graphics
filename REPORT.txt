@@ -1,0 +1,40 @@
+We implemented ray casting, intersection detection with squares and spheres, Phong shading, and anti-aliasing.
+Additionally we created a game for p2 where the player controls a character that moves down a road and needs to dodge obstacles, while the light flickers.
+The game is controlled by pressing "A" to move left, and "D" to move right.
+
+Part 1
+---------------
+For implementing ray casting, we took the view ray and applied the view to world matrix to it.
+
+For the sphere, we followed section 11.3.3 in http://www.cdf.toronto.edu/~moore/csc418/Notes/BasicRayTracing.pdf
+We assigned each variable with the corresponding parameter and then implemented the equation.
+
+For the square, we implemented section 11.3.1 in http://www.cdf.toronto.edu/~moore/csc418/Notes/BasicRayTracing.pdf
+regarding triangles. I created two triangles using the appropriate points and then checked if intersections happened on them.
+
+For Phong shading, we implented section 12.5 in http://www.cdf.toronto.edu/~moore/csc418/Notes/RadiometryAndReflection.pdf
+We assigned each variable with the corresponding parameter and then implemented the equation.
+
+For anti-aliasing, we ran four rays for each pixel, each ray shifted by 0.5 in some direction. I then averaged the ray colours.
+
+We used no external resources.
+
+Part 2
+---------------
+
+The game was abstracted into several modules:
+
+  - main.cpp: The main starting point of the application. Has a simple game loop that attempts to achieve 60 frames per second,
+  and restarts the game when the player dies.
+  - world.cpp: Handles player interactions with the obstacles in the environment, and is responsible for obstacle spawning logic.
+  Calls the render method of all the objects in the environment.
+  - player.cpp: Controls and renders the player.
+  - boundingbox.cpp: Abstracts collision logic used within the game.
+  - camera.cpp: Abstracts the movement of the camera into an object with a position and offset from the player.
+
+The degrees of freedom are demonstrated using wings that are attached to the player, flapping as they move. The lighting is demonstrated
+using a flashing light that is rendered above the player's head.
+  
+Role of each member:
+Lorenz - Part 1, and pair programmed with some of part 2.
+Alex - Part 2, and pair programmed with some of part 1.
