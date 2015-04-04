@@ -10,7 +10,6 @@
 
 #include "player.h"
 #include "camera.h"
-#include "obstacle.h"
 #include "utils.h"
 
 class World {
@@ -18,6 +17,7 @@ public:
     World();
     virtual ~World();
     
+    bool needsRestart();
     void addObstacle(Vector3D pos);
     
     void keydown(unsigned char key);
@@ -39,7 +39,10 @@ private:
     Camera camera;
     
     BoundingBox obstacles[10];
+    
     int numObstacles;
+    
+    int spawnObstacleTimer;
 };
 
 #endif	/* WORLD_H */

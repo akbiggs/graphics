@@ -18,7 +18,7 @@ const double WING_OFFSET_Z = 0.0;
 const double WING_ROTATION_MAX = 45;
 const double WING_ROTATION_MIN = 0;
 
-const Vector3D PLAYER_SCALE = Vector3D(1, 0.2, 0.5);
+//const Vector3D& PLAYER_SCALE = Vector3D(1, 0.2, 0.5);
 const double PLAYER_MOVE_SPEED = 0.1;
 
 class Player {
@@ -41,6 +41,8 @@ public:
     void update();
     void render();
     
+    bool isDead;
+    
 private:
     bool areWingsExtendedFully() const;
     
@@ -53,6 +55,8 @@ private:
     bool areWingsFlappingUp;
     
     BoundingBox collider;
+    
+    int lightFlashCounter;
 };
 
 #endif	/* PLAYER_H */

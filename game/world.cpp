@@ -19,19 +19,22 @@ World::World() {
     this->camera.setOffsetFromPlayer(offset);
     
     this->player.setPos(Vector3D(0, 1, 0));
-    this->player.setVelocity(Vector3D(0, 0, -0.2));
+    this->player.setVelocity(Vector3D(0, 0, -0.4));
     
     this->numObstacles = 0;
     
     this->addObstacle(Vector3D(0, 0, -50));
-    this->addObstacle(Vector3D(-4, 0, -50));
+    this->addObstacle(Vector3D(-4, 0, -130));
 }
 
 World::~World() {
-    delete this->obstacles;
 }
 
 /* METHODS */
+
+bool World::needsRestart() {
+    return this->player.isDead;
+}
 
 void World::addObstacle(Vector3D pos) {
     this->obstacles[numObstacles++] = BoundingBox(pos, Vector3D(1, 1, 1));
@@ -55,11 +58,25 @@ void World::update() {
     
     for (int i = 0; i < this->numObstacles; i++) {
         if (this->player.collidesWithObstacle(this->obstacles[i])) {
-            printf("Colliding\n");
+            this->player.isDead = true;
+        }
+        
+        Vector3D obstaclePos = this->obstacles[i].GetPos();
+        double playerZ = this->player.getPos()[2];
+        if (obstaclePos[2] > playerZ + 5) {
+            long laneChoice = randomAtMost(2);
+            double obstacleX;
+            if (laneChoice == 0) {
+                obstacleX = -4;
+            } else if (laneChoice == 1) {
+                obstacleX = 0;
+            } else {
+                obstacleX = 4;
+            }
+            this->obstacles[i].SetPos(Vector3D(obstacleX, 0, playerZ - 40));
         }
     }
 }
-
 
 void World::render() {
 //    glPushMatrix();

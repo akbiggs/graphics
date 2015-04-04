@@ -9,6 +9,7 @@
 
 #include "utils.h"
 #include "boundingbox.h"
+#include "stdio.h"
 
 BoundingBox::BoundingBox() {
 }
@@ -43,32 +44,33 @@ void BoundingBox::render() {
     glPushAttrib(GL_POLYGON_BIT);
     
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        cube(this->pos, Vector3D(0, 0, 0), 2 * this->extents);
+        glColor3f(0.5, 0.5, 0);
+        cube(this->pos, Vector3D(0, 0, 0), this->extents);
         
     glPopAttrib();
     glPopMatrix();
 }
 
 double BoundingBox::GetLeft() const {
-    return this->pos[0] - this->extents[0];
+    return this->pos[0] - this->extents[0] * 2;
 }
 
 double BoundingBox::GetRight() const {
-    return this->pos[0] + this->extents[0];
+    return this->pos[0] + this->extents[0] * 2;
 }
 
 double BoundingBox::GetTop() const {
-    return this->pos[1] + this->extents[1];
+    return this->pos[1] + this->extents[1] * 2;
 }
 
 double BoundingBox::GetBottom() const {
-    return this->pos[1] - this->extents[1];
+    return this->pos[1] - this->extents[1] * 2;
 }
 
 double BoundingBox::GetFront() const {
-    return this->pos[2] - this->extents[2];
+    return this->pos[2] - this->extents[2] * 2;
 }
 
 double BoundingBox::GetBack() const {
-    return this->pos[2] + this->extents[2];
+    return this->pos[2] + this->extents[2] * 2;
 }

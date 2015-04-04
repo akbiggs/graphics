@@ -217,4 +217,7 @@ void scale(const Vector3D amount);
 void cube(const Vector3D pos, const Vector3D rot, const Vector3D scale);
 void colour(const Colour& c);
 
+/* RANDOM HELPERS */
+long randomAtMost(long max);
+
 #endif	/* HELPERS_H */

@@ -162,7 +162,7 @@ void initGlui() {
 void initGl(void) {
     // glClearColor (red, green, blue, alpha)
     // Ignore the meaning of the 'alpha' value for now
-    glClearColor(0.7f, 0.7f, 0.9f, 1.0f);
+    glClearColor(0, 0, 0, 1);
 
     glEnable(GL_DEPTH_TEST);
 }
@@ -212,6 +212,10 @@ void display(void) {
     // Setup the model-view transformation matrix
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    
+    if (world.needsRestart()) {
+        world = World();
+    }
     
     world.update();
     world.render();
