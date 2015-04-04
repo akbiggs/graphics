@@ -133,8 +133,9 @@ Vector3D& Vector3D::operator =(const Vector3D& other) {
 }
 
 double& Vector3D::operator[](int i) {
-	return m_data[i];
+        return m_data[i];
 }
+
 double Vector3D::operator[](int i) const {
 	return m_data[i];
 }
@@ -204,9 +205,6 @@ Vector3D Vector3D::cross(const Vector3D& other) const
 			m_data[2]*other[0] - m_data[0]*other[2],
 			m_data[0]*other[1] - m_data[1]*other[0]);
 }
-
-Vector3D Vector3D::zero = Vector3D(0, 0, 0);
-Vector3D Vector3D::one = Vector3D(1, 1, 1);
 
 Vector3D operator *(double s, const Vector3D& v)
 {
@@ -476,7 +474,7 @@ long getTotalMillisecondsElapsed() {
     return (currentTime.tv_sec * 1000 + currentTime.tv_usec / 1000.0) + 0.5;
 }
 
-void translate(const Vector3D& delta) {
+void translate(const Vector3D delta) {
     glTranslatef(delta[0], delta[1], delta[2]);
 }
 
@@ -486,24 +484,53 @@ void rotate(GLfloat x, GLfloat y, GLfloat z) {
     glRotatef(z, 0.0, 0.0, 1.0);
 }
 
-void rotate(const Vector3D& amount) {
+void rotate(const Vector3D amount) {
     rotate(amount[0], amount[1], amount[2]);
 }
 
-void scale(const Vector3D& scale) {
+void scale(const Vector3D scale) {
     glScalef(scale[0], scale[1], scale[2]);
 }
 
-void cube(const Vector3D& pos, const Vector3D& rot, const Vector3D& scale) {
+//void translate(const Vector3D& delta) {
+//    glTranslatef(delta[0], delta[1], delta[2]);
+//}
+//
+//void rotate(GLfloat x, GLfloat y, GLfloat z) {
+//    glRotatef(x, 1.0, 0.0, 0.0);
+//    glRotatef(y, 0.0, 1.0, 0.0);
+//    glRotatef(z, 0.0, 0.0, 1.0);
+//}
+//
+//void rotate(const Vector3D& amount) {
+//    rotate(amount[0], amount[1], amount[2]);
+//}
+//
+//void scale(const Vector3D& scale) {
+//    glScalef(scale[0], scale[1], scale[2]);
+//}
+
+void cube(const Vector3D pos, const Vector3D rot, const Vector3D sca) {
     glPushMatrix();
     
     translate(pos);
     rotate(rot);
-    scale(scale);
+    scale(sca);
     drawCube();
     
     glPopMatrix();
 }
+
+//void cube(const Vector3D& pos, const Vector3D& rot, const Vector3D& sca) {
+//    glPushMatrix();
+//    
+//    translate(pos);
+//    rotate(rot);
+//    scale(sca);
+//    drawCube();
+//    
+//    glPopMatrix();
+//}
 
 void colour(const Colour& c) {
     glColor3f(c[0], c[1], c[2]);

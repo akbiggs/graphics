@@ -13,14 +13,22 @@
 BoundingBox::BoundingBox() {
 }
 
-BoundingBox::BoundingBox(Vector3D& p, Vector3D& e) : pos(p), extents(e) {
+BoundingBox::BoundingBox(const Vector3D p, const Vector3D e) : pos(p), extents(e) {
 }
 
 BoundingBox::~BoundingBox() {
 }
 
+Vector3D BoundingBox::GetPos() const {
+    return this->pos;
+}
+
 void BoundingBox::SetPos(const Vector3D& other) {
     this->pos = other;
+}
+
+Vector3D BoundingBox::GetExtents() const {
+    return this->extents;
 }
 
 bool BoundingBox::Intersects(const BoundingBox& other) const {
@@ -29,13 +37,13 @@ bool BoundingBox::Intersects(const BoundingBox& other) const {
             this->GetFront() <= other.GetBack() && this->GetBack() >= other.GetFront();
 }
 
-/* Render the bounding box. Assumes no transformation has been applied. */
+/* Render the bounding box relative to the currently pushed frame of reference. */
 void BoundingBox::render() {
     glPushMatrix();
     glPushAttrib(GL_POLYGON_BIT);
     
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        cube(this->pos, Vector3D::zero, 2 * this->extents);
+        cube(this->pos, Vector3D(0, 0, 0), 2 * this->extents);
         
     glPopAttrib();
     glPopMatrix();

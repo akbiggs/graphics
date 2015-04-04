@@ -11,12 +11,13 @@
 
 #include "player.h"
 #include "utils.h"
-
+#include "boundingbox.h"
 
 /* CONSTRUCTOR/DESTRUCTOR */
 
 Player::Player() {
     this->wingRotation = WING_ROTATION_MIN;
+    this->collider = BoundingBox(Vector3D(0, 0, 0), PLAYER_SCALE);
 }
 
 Player::~Player() {
@@ -30,18 +31,24 @@ Vector3D Player::getPos() const {
 
 void Player::setPos(const Vector3D& p) {
     this->pos = p;
+    this->collider.SetPos(this->pos);
 }
 
 void Player::setVelocity(const Vector3D& vel) {
     this->vel = vel;
 }
 
+bool Player::collidesWithObstacle(BoundingBox obstacle) {
+    return this->collider.Intersects(obstacle);
+}
+
 void Player::update() {
-    this->pos = this->pos + this->vel;
+    this->setPos(this->pos + this->vel);
     
+    this->wingRotation += this->areWingsFlappingUp ? 2 : -2;
     this->wingRotation = this->areWingsFlappingUp ?
-        fmin(WING_ROTATION_MAX, this->wingRotation++) :
-        fmax(WING_ROTATION_MIN, this->wingRotation--);
+        fmin(WING_ROTATION_MAX, this->wingRotation) :
+        fmax(WING_ROTATION_MIN, this->wingRotation);
     
     if (this->areWingsExtendedFully()) {
         this->areWingsFlappingUp = !this->areWingsFlappingUp;
@@ -82,6 +89,8 @@ void Player::renderWing(bool isLeftWing) {
     // move to center of wing, render
     glTranslatef(isLeftWing ? 0.5 : -0.5, 0, 0);
     drawCube();
-            
+
     glPopMatrix();
+    
+    this->collider.render();
 }

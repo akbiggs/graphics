@@ -13,10 +13,14 @@
 class BoundingBox {
 public:
     BoundingBox();
-    BoundingBox(Vector3D& pos, Vector3D& extents);
+    BoundingBox(Vector3D pos, Vector3D extents);
     virtual ~BoundingBox();
     
+    Vector3D GetPos() const;
     void SetPos(const Vector3D& other);
+    
+    Vector3D GetExtents() const;
+    
     bool Intersects(const BoundingBox& other) const;
     
     void render();

@@ -9,13 +9,16 @@
 #define	PLAYER_H
 
 #include "utils.h"
+#include "boundingbox.h"
 
 const double WING_OFFSET_X = 0.4;
 const double WING_OFFSET_Y = 0.2;
 const double WING_OFFSET_Z = 0.0;
 
-const double WING_ROTATION_MAX = 90;
+const double WING_ROTATION_MAX = 45;
 const double WING_ROTATION_MIN = 0;
+
+const Vector3D PLAYER_SCALE = Vector3D(1, 0.2, 0.5);
 
 class Player {
 public:
@@ -26,6 +29,8 @@ public:
     void setPos(const Vector3D& p);
     
     void setVelocity(const Vector3D& vel);
+    
+    bool collidesWithObstacle(BoundingBox obstacle);
     
     void update();
     void render();
@@ -40,6 +45,8 @@ private:
     
     float wingRotation;
     bool areWingsFlappingUp;
+    
+    BoundingBox collider;
 };
 
 #endif	/* PLAYER_H */

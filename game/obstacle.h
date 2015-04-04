@@ -19,9 +19,9 @@ public:
     void update();
     void render();
 private:
-    Vector3D pos;
-    Vector3D size;
-    BoundingBox collider;
+    Vector3D* pos;
+    Vector3D* size;
+    BoundingBox* collider;
 };
 
 #endif	/* OBSTACLE_H */

@@ -48,7 +48,7 @@ PROGRAM	          = main
 CSRCS         =
 
 # Define all C++ source files here
-CPPSRCS       := $(shell ls *.cpp)
+CPPSRCS       := main.cpp world.cpp player.cpp utils.cpp camera.cpp boundingbox.cpp vector.cpp
 
 ##############################################################################
 # Define additional rules that make should know about in order to compile our

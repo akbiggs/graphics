@@ -834,6 +834,7 @@ void reshape(int w, int h) {
 // animate() function.
 
 void display(void) {
+    
     // Clear the screen with the background colour
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

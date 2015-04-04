@@ -11,12 +11,14 @@
 #include "player.h"
 #include "camera.h"
 #include "obstacle.h"
-#include <vector>
+#include "utils.h"
 
 class World {
 public:
     World();
     virtual ~World();
+    
+    void addObstacle(Vector3D pos);
     
     void update();
     void render();
@@ -28,10 +30,13 @@ private:
     void renderLanes();
     void renderLane(const Colour c);
     
+    void renderObstacle(BoundingBox obstacle);
+    
     Player player;
     Camera camera;
     
-    std::vector<Obstacle> obstacles;
+    BoundingBox obstacles[10];
+    int numObstacles;
 };
 
 #endif	/* WORLD_H */
